@@ -65,11 +65,10 @@ export default function GuidePage() {
         </div>
 
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* 平台介绍 */}
           <Card className="border-yellow-200 shadow-xl">
             <CardHeader className="bg-gradient-to-r from-yellow-100 to-orange-100">
               <CardTitle className="flex items-center gap-2 text-yellow-800">
-                <div className="w-8 h-8 bg-yellow-200 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-yellow-200 rounded-full forearms-center justify-center">
                   <Star className="w-4 h-4 text-yellow-700" />
                 </div>
                 平台介绍
@@ -99,13 +98,13 @@ export default function GuidePage() {
                     <li>• 将通过的项目写入区块链</li>
                     <li>• 管理项目ID分配</li>
                     <li>• 查看审核统计</li>
+                    <li>• 转移管理员权限</li>
                   </ul>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* 用户使用流程 */}
           <Card className="border-green-200 shadow-xl">
             <CardHeader className="bg-gradient-to-r from-green-100 to-emerald-100">
               <CardTitle className="flex items-center gap-2 text-green-800">
@@ -117,7 +116,6 @@ export default function GuidePage() {
             </CardHeader>
             <CardContent className="pt-6">
               <div className="space-y-6">
-                {/* 步骤1：搜索 */}
                 <div className="flex gap-4">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center font-bold">
@@ -138,7 +136,6 @@ export default function GuidePage() {
                   </div>
                 </div>
 
-                {/* 步骤2：提交申请 */}
                 <div className="flex gap-4">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold">
@@ -148,7 +145,7 @@ export default function GuidePage() {
                   <div className="flex-1">
                     <h4 className="font-semibold mb-2 text-green-800">提交新申请（如果搜索无结果）</h4>
                     <p className="text-gray-600 mb-3">
-                      如果搜索不到您需要的前缀，可以点击"提交模板申请"按钮，填写完整信息。
+                      如果搜索不到您需要的前缀，可以点击"提交模板申请"按钮，填写完整信息并通过 MetaMask 提交到区块链。
                     </p>
                     <div className="bg-green-50 p-3 rounded border-l-4 border-green-500">
                       <p className="text-sm">
@@ -161,13 +158,12 @@ export default function GuidePage() {
                           短信模板：【洋葱学院】您的验证码为：2212，请在5分钟内完成验证登录，请勿向他人泄露，如非本人操作请忽略
                         </li>
                         <li>• 联系方式：your@email.com（可选）</li>
-                        <li>• 用途说明：用于在线教育平台的用户登录验证</li>
+                        <li>• 用途说明：用于在线教育平台的用户登录验证（可选）</li>
                       </ul>
                     </div>
                   </div>
                 </div>
 
-                {/* 步骤3：等待审核 */}
                 <div className="flex gap-4">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">
@@ -196,7 +192,6 @@ export default function GuidePage() {
                   </div>
                 </div>
 
-                {/* 步骤4：查询结果 */}
                 <div className="flex gap-4">
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold">
@@ -220,7 +215,6 @@ export default function GuidePage() {
             </CardContent>
           </Card>
 
-          {/* 管理员操作流程 */}
           <Card className="border-purple-200 shadow-xl">
             <CardHeader className="bg-gradient-to-r from-purple-100 to-pink-100">
               <CardTitle className="flex items-center gap-2 text-purple-800">
@@ -260,11 +254,18 @@ export default function GuidePage() {
                     </ul>
                   </div>
                 </div>
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <h4 className="font-semibold text-purple-900 mb-2">3. 转移管理员权限</h4>
+                  <ul className="text-sm text-purple-800 space-y-1">
+                    <li>• 输入新管理员的 Ethereum 地址</li>
+                    <li>• 点击"转移权限"并通过 MetaMask 确认</li>
+                    <li>• 新管理员获得审核和写入权限</li>
+                  </ul>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* 常见问题 */}
           <Card className="border-red-200 shadow-xl">
             <CardHeader className="bg-gradient-to-r from-red-100 to-pink-100">
               <CardTitle className="text-red-800">常见问题</CardTitle>
@@ -287,7 +288,6 @@ export default function GuidePage() {
             </CardContent>
           </Card>
 
-          {/* 快速开始 */}
           <Card className="bg-gradient-to-r from-yellow-100 via-orange-100 to-yellow-100 border-yellow-300 shadow-xl">
             <CardHeader>
               <CardTitle className="text-yellow-800">快速开始</CardTitle>

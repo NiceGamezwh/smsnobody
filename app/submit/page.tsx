@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 import Image from "next/image";
 import Notification from "@/components/ui/notification";
+import { useWeb3 } from "@/hooks/use-web3";
+import { submitApplicationToContract } from "@/lib/contract";
 
 interface SubmissionData {
   prefix: string;
@@ -28,6 +30,7 @@ export default function SubmitPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [notification, setNotification] = useState("");
+  const { isConnected, connectWallet } = useWeb3();
 
   const handleInputChange = (field: keyof SubmissionData, value: string) => {
     setFormData((prev) => ({
@@ -38,6 +41,10 @@ export default function SubmitPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isConnected) {
+      setNotification("请先连接 MetaMask");
+      return;
+    }
     if (!formData.prefix.trim() || !formData.template.trim()) {
       setNotification("请填写前缀和模板");
       return;
@@ -45,20 +52,17 @@ export default function SubmitPage() {
 
     setIsSubmitting(true);
     try {
-      const submissions = JSON.parse(localStorage.getItem("pendingSubmissions") || "[]");
-      const newSubmission = {
-        ...formData,
-        id: Date.now().toString(),
-        timestamp: new Date().toISOString(),
-        status: "pending",
-      };
-      submissions.push(newSubmission);
-      localStorage.setItem("pendingSubmissions", JSON.stringify(submissions));
+      await submitApplicationToContract(
+        formData.prefix,
+        formData.template,
+        formData.contact,
+        formData.description
+      );
       setSubmitted(true);
       setNotification("模板已提交，等待管理员审核");
     } catch (error) {
       console.error("提交失败:", error);
-      setNotification("提交失败，请重试");
+      setNotification("提交失败，请检查网络或 Gas 费用");
     } finally {
       setIsSubmitting(false);
     }
@@ -121,6 +125,31 @@ export default function SubmitPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-yellow-100">
       <Notification message={notification} />
+      <div className="relative overflow-hidden">
+        <Image
+          src="/images/banner.jpg"
+          alt="NobodySMS Banner"
+          width={1500}
+          height={500}
+          className="w-full h-64 object-cover opacity-80"
+        />
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center text-white">
+            <div className="flex items-center justify-center mb-4">
+              <Image
+                src="/images/logo.png"
+                alt="NobodySMS"
+                width={80}
+                height={80}
+                className="rounded-full border-4 border-yellow-400 shadow-lg"
+              />
+            </div>
+            <h1 className="text-5xl font-bold mb-2 text-shadow-lg">提交模板申请</h1>
+            <p className="text-xl font-medium">请填写您需要的短信前缀和模板信息</p>
+          </div>
+        </div>
+      </div>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <Link href="/">
@@ -142,6 +171,11 @@ export default function SubmitPage() {
               <p className="text-gray-600">请填写您需要的短信前缀和模板信息，我们将尽快审核</p>
             </div>
           </div>
+          {!isConnected && (
+            <Button onClick={connectWallet} className="bg-yellow-500 hover:bg-yellow-600 text-white">
+              连接 MetaMask
+            </Button>
+          )}
         </div>
 
         <div className="max-w-2xl mx-auto">
@@ -219,7 +253,7 @@ export default function SubmitPage() {
                 <Button
                   type="submit"
                   className="w-full bg-yellow-500 hover:bg-yellow-600 text-white"
-                  disabled={!isFormValid || isSubmitting}
+                  disabled={!isFormValid || isSubmitting || !isConnected}
                 >
                   {isSubmitting ? (
                     "提交中..."
@@ -245,7 +279,7 @@ export default function SubmitPage() {
                   <p className="text-sm text-gray-600">洋葱学院</p>
                 </div>
                 <div>
-                  <p className="font-medium text-sm text-green-800">短信模板:</p>
+ slippers                  <p className="font-medium text-sm text-green-800">短信模板:</p>
                   <p className="text-sm text-gray-600">
                     【洋葱学院】您的验证码为：2212，请在5分钟内完成验证登录，请勿向他人泄露，如非本人操作请忽略
                   </p>

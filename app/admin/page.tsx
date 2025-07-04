@@ -18,23 +18,27 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { useWeb3 } from "@/hooks/use-web3";
-import { addProjectToContract } from "@/lib/contract";
+import { addProjectToContract, approveApplication, rejectApplication, getAllApplications, transferAdmin } from "@/lib/contract";
 import Notification from "@/components/ui/notification";
+import { ethers } from "ethers";
 
 interface Submission {
-  id: string;
+  id: number;
   prefix: string;
   template: string;
   contact: string;
   description: string;
-  timestamp: string;
-  status: "pending" | "approved" | "rejected";
+  submitter: string;
+  status: string;
+  projectId: string;
+  timestamp: number;
 }
 
 export default function AdminPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [projectId, setProjectId] = useState("");
+  const [newAdminAddress, setNewAdminAddress] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -42,9 +46,20 @@ export default function AdminPage() {
   const { isConnected, account, connectWallet } = useWeb3();
 
   useEffect(() => {
-    const saved = localStorage.getItem("pendingSubmissions");
-    if (saved) setSubmissions(JSON.parse(saved));
-  }, []);
+    if (isAuthenticated && isConnected) {
+      fetchApplications();
+    }
+  }, [isAuthenticated, isConnected]);
+
+  const fetchApplications = async () => {
+    try {
+      const apps = await getAllApplications();
+      setSubmissions(apps);
+    } catch (error) {
+      console.error("获取申请失败:", error);
+      setNotification("获取申请失败，请重试");
+    }
+  };
 
   const handleLogin = () => {
     if (password === "Zwh200102281057$") {
@@ -53,12 +68,6 @@ export default function AdminPage() {
     } else {
       setNotification("密码错误");
     }
-  };
-
-  const updateSubmissionStatus = (id: string, status: "approved" | "rejected") => {
-    const updated = submissions.map((sub) => (sub.id === id ? { ...sub, status } : sub));
-    setSubmissions(updated);
-    localStorage.setItem("pendingSubmissions", JSON.stringify(updated));
   };
 
   const handleApprove = async (submission: Submission) => {
@@ -74,21 +83,49 @@ export default function AdminPage() {
 
     setIsProcessing(true);
     try {
-      await addProjectToContract(submission.prefix, projectId.trim());
-      updateSubmissionStatus(submission.id, "approved");
+      // 写入原合约
+      await addProjectToContract(submission.prefix, projectId);
+      // 更新申请状态
+      await approveApplication(submission.id, projectId);
       setNotification(`前缀 ${submission.prefix} 已写入区块链`);
       setProjectId("");
       setSelectedSubmission(null);
+      await fetchApplications();
     } catch (error) {
-      console.error("添加到区块链失败:", error);
-      setNotification("写入区块链失败，请检查网络连接和 Gas 费用");
+      console.error("审批失败:", error);
+      setNotification("写入区块链失败，请检查网络或 Gas 费用");
     }
     setIsProcessing(false);
   };
 
-  const handleReject = (submission: Submission) => {
-    updateSubmissionStatus(submission.id, "rejected");
-    setNotification(`前缀 ${submission.prefix} 已拒绝`);
+  const handleReject = async (submission: Submission) => {
+    setIsProcessing(true);
+    try {
+      await rejectApplication(submission.id);
+      setNotification(`前缀 ${submission.prefix} 已拒绝`);
+      await fetchApplications();
+    } catch (error) {
+      console.error("拒绝失败:", error);
+      setNotification("拒绝失败，请重试");
+    }
+    setIsProcessing(false);
+  };
+
+  const handleTransferAdmin = async () => {
+    if (!ethers.isAddress(newAdminAddress)) {
+      setNotification("请输入有效的 Ethereum 地址");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      await transferAdmin(newAdminAddress);
+      setNotification(`管理员权限已转移到 ${newAdminAddress}`);
+      setNewAdminAddress("");
+    } catch (error) {
+      console.error("转移管理员失败:", error);
+      setNotification("转移管理员失败，请检查网络或 Gas 费用");
+    }
+    setIsProcessing(false);
   };
 
   const pendingSubmissions = submissions.filter((sub) => sub.status === "pending");
@@ -97,6 +134,31 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-yellow-100">
       <Notification message={notification} />
+      <div className="relative overflow-hidden">
+        <Image
+          src="/images/banner.jpg"
+          alt="NobodySMS Banner"
+          width={1500}
+          height={500}
+          className="w-full h-64 object-cover opacity-80"
+        />
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center text-white">
+            <div className="flex items-center justify-center mb-4">
+              <Image
+                src="/images/logo.png"
+                alt="NobodySMS"
+                width={80}
+                height={80}
+                className="rounded-full border-4 border-yellow-400 shadow-lg"
+              />
+            </div>
+            <h1 className="text-5xl font-bold mb-2 text-shadow-lg">管理员审核中心</h1>
+            <p className="text-xl font-medium">审核用户提交的短信模板申请</p>
+          </div>
+        </div>
+      </div>
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <Link href="/">
@@ -214,6 +276,31 @@ export default function AdminPage() {
             )}
 
             <div className="mb-8">
+              <Card className="border-purple-200 shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-purple-100 to-pink-100">
+                  <CardTitle className="text-purple-800">转移管理员权限</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="输入新管理员地址"
+                      value={newAdminAddress}
+                      onChange={(e) => setNewAdminAddress(e.target.value)}
+                      className="border-purple-300 focus:border-purple-500"
+                    />
+                    <Button
+                      onClick={handleTransferAdmin}
+                      disabled={!newAdminAddress || isProcessing || !isConnected}
+                      className="bg-purple-500 hover:bg-purple-600 text-white"
+                    >
+                      {isProcessing ? "处理中..." : "转移权限"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="mb-8">
               <h2 className="text-xl font-semibold mb-4 text-yellow-800">待审核申请 ({pendingSubmissions.length})</h2>
               {pendingSubmissions.length === 0 ? (
                 <Card className="border-gray-200 shadow-lg">
@@ -233,7 +320,7 @@ export default function AdminPage() {
                           <div>
                             <CardTitle className="text-lg text-orange-800">【{submission.prefix}】</CardTitle>
                             <CardDescription className="text-orange-700">
-                              提交时间: {new Date(submission.timestamp).toLocaleString()}
+                              提交时间: {new Date(submission.timestamp * 1000).toLocaleString()}
                             </CardDescription>
                           </div>
                           <Badge className="bg-orange-100 text-orange-800">待审核</Badge>
@@ -257,6 +344,10 @@ export default function AdminPage() {
                               <p className="text-sm text-gray-600">{submission.contact}</p>
                             </div>
                           )}
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">提交者:</p>
+                            <p className="text-sm text-gray-600">{submission.submitter}</p>
+                          </div>
                           <div className="flex gap-2 pt-4">
                             <Dialog>
                               <DialogTrigger asChild>
@@ -312,6 +403,7 @@ export default function AdminPage() {
                               size="sm"
                               onClick={() => handleReject(submission)}
                               className="bg-red-500 hover:bg-red-600"
+                              disabled={isProcessing || !isConnected}
                             >
                               <X className="w-4 h-4 mr-1" />
                               拒绝
@@ -340,7 +432,7 @@ export default function AdminPage() {
                         <div className="flex justify-between items-start">
                           <div>
                             <CardTitle className="text-lg">【{submission.prefix}】</CardTitle>
-                            <CardDescription>处理时间: {new Date(submission.timestamp).toLocaleString()}</CardDescription>
+                            <CardDescription>处理时间: {new Date(submission.timestamp * 1000).toLocaleString()}</CardDescription>
                           </div>
                           <Badge
                             className={
@@ -356,7 +448,7 @@ export default function AdminPage() {
                         {submission.status === "approved" && (
                           <div className="flex items-center gap-2 text-xs text-green-600">
                             <ExternalLink className="w-3 h-3" />
-                            已写入 Sepolia 测试网
+                            项目ID: {submission.projectId} | 已写入 Sepolia 测试网
                           </div>
                         )}
                       </CardContent>
