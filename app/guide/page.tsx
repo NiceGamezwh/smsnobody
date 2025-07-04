@@ -151,7 +151,7 @@ export default function GuidePage() {
                     <ul className="text-sm text-blue-800 space-y-1 mb-3">
                       <li>• 安装 MetaMask 浏览器插件</li>
                       <li>• 切换到 Sepolia 测试网络</li>
-                      <li>• 获取 Sepolia ETH（通过水龙头或联系管理员索要，邮箱：admin@nobodysms.com）</li>
+                      <li>• 获取 Sepolia ETH（通过水龙头或联系管理员索要，邮箱：nobodysms@polkagame.cn）</li>
                       <li>• 在提交页面连接钱包</li>
                     </ul>
                     <div className="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
@@ -165,7 +165,7 @@ export default function GuidePage() {
                         >
                           Sepolia Faucet
                         </a>{" "}
-                        获取免费的 Sepolia ETH，或联系管理员（admin@nobodysms.com）。
+                        获取免费的 Sepolia ETH，或联系管理员（nobodysms@polkagame.cn）。
                       </p>
                     </div>
                   </div>
@@ -265,7 +265,7 @@ export default function GuidePage() {
                 <AlertDescription className="text-yellow-800">
                   <strong>前提条件：</strong>
                   需要使用管理员账户（Ethereum 地址）登录，并确保账户中有足够的 Sepolia ETH 用于支付 Gas 费用。
-                  可通过水龙头或联系管理员（admin@nobodysms.com）获取 Sepolia ETH。
+                  可通过水龙头或联系管理员（nobodysms@polkagame.cn）获取 Sepolia ETH。
                 </AlertDescription>
               </Alert>
 
